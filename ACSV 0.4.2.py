@@ -131,6 +131,7 @@ def processTXNS(getTxn):
         
         #Base definitions
         tSender = str(getTxn['sender'])
+        tReceiver = ''
         tID = getTxn['id']
         tDate = str(datetime.datetime.fromtimestamp(getTxn['round-time']))
 
@@ -281,15 +282,20 @@ def getAsa(asaID):
     #set required details to vars
     asaDetails = asaJSON['asset']
     asaParams = asaDetails['params']
-    if asaParams['unit-name'] == 'TM1POOL':
-        asaPoolTick = asaParams['name']
-        asaPoolTickCut = asaPoolTick.zfill(12)
-        asaTick = 'TM1POOL -' + asaPoolTickCut[12:]
+    if 'unit-name' in asaParams:
+        if asaParams['unit-name'] == 'TM1POOL':
+            asaPoolTick = asaParams['name']
+            asaPoolTickCut = asaPoolTick.zfill(12)
+            asaTick = 'TM1POOL -' + asaPoolTickCut[12:]
+        else:
+            asaTick = asaParams['unit-name'] + '-ASA'
     else:
-        asaTick = asaParams['unit-name'] + '-ASA'
+        asaTick = asaID
+    if 'name' in asaParams: asaName = asaParams['name']
+    else: asaName = asaID
     #build asa dictionary entry
     details = {"id"         : asaID,
-               "name"       : asaParams['name'],
+               "name"       : asaName,
                "ticker"     : asaTick,
                "decimals"   : asaParams['decimals']}
     #return asa dictionary entry
@@ -375,7 +381,7 @@ gDate = ''
 
 print('Begin Row Building\n')
 
-algocsv = open('ALGO.csv', 'w', newline='')
+algocsv = open('ALGO.csv', 'w', newline='', encoding='utf-8')
 writer = csv.writer(algocsv)
 row = ['Type', 'In Quantity', 'In ID',
        'Out Quantity', 'Out ID',
@@ -416,6 +422,7 @@ for txnID in txnOrder:
             gGroupID = ''
             gDate = ''
             txnCount = 0
+            rowGroup = ''
 
         #Start working group row
         txnCount += 1
@@ -496,13 +503,26 @@ for txnID in txnOrder:
                     writeRow(gType, 0, '', rOutQ, rOutID, '', gWallet, gPlatform, 'Extra Txn', gGroupID, gDate)
 
     #Single row txn. Pass to write function.    
-    elif rGroupID == '' and rType != 'Staking':
-        #if rowGroup != '':
-        #    writeRow(gType, gInQ, gInID, gOutQ, gOutID, gFee, gWallet, gPlatform, gID, gGroupID, gDate)
+    elif rGroupID == '':
+        if rDate != gDate and gDate != '':
+            writeRow(gType, gInQ, gInID, gOutQ, gOutID, gFee, gWallet, gPlatform, gID, gGroupID, gDate)
+            gType = ''
+            gInQ = 0
+            gInID = ''
+            gOutQ = 0
+            gOutID = ''
+            gFee = 0
+            gWallet = walletShort
+            gPlatform = ''
+            gID = ''
+            gGroupID = ''
+            gDate = ''
+            txnCount = 0
+            rowGroup = ''
         writeRow(rType, rInQ, rInID, rOutQ, rOutID, rFee, rWallet, rPlatform, rID, rGroupID, rDate)
 
-    elif rType == 'Staking':
-        writeRow(rType, rInQ, rInID, rOutQ, rOutID, rFee, rWallet, rPlatform, rID, '', rDate)
+
+if gType != '':  writeRow(gType, gInQ, gInID, gOutQ, gOutID, gFee, gWallet, gPlatform, 'TXN Count: ' + str(txnCount), gGroupID, gDate)
 
 algocsv.close()
 
