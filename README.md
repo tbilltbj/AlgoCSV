@@ -16,8 +16,6 @@ Participation Rewards: Parsed out from the TXNs and shown as a separate row.
 
 Limits and issues:
 
-Some transactions are out of chronological order. This is related to parsing groups and single txns differently while accommodating a reward in the middle of the group. not sure how to fix it without breaking something else at the moment.
-
 Commenting: code could be commented a LOT better. will work on it. just wanted to push a release for people to use/test. I know it's tax filing time in the U.S. so if it can help you, fantastic.
 
 Platform, ID, GroupID columns need more consistency. This was a failure to plan before building on my behalf. Again, can be improved.
